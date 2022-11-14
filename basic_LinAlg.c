@@ -446,6 +446,56 @@ void symmat_ausgeben(const double *A,      // Matrix
   /*
     ................................
   */
+
+  double solution;
+  int laufzahl = 0; //weil ich lazy bin, geht aber auch mit den Loops allein glaub ich 
+                    //... und ich fang selbst schon an cursed deutsch zu coden
+  
+  //Dreiecksschleife
+  /*
+  
+  1 2 3
+  4 5 6
+  7 8 9
+  
+  (1) 2 3 -> gehen in else if und arbeite 2 3 ab
+  4 5 6
+  7 8 9
+
+  (1) (2) (3)
+  4 5 6
+  7 8 9
+
+(1) (2) (3)
+  (4) 5 6
+  7 8 9
+
+(1) (2) (3)
+  (4) (5) 6 -> gehe in else if
+  7 8 9
+
+...
+  */
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j <= i; j++) {
+      if (i!=j) {
+        printf(form, A[laufzahl]);
+        laufzahl += 1;
+      } else {
+        printf(form, A[laufzahl]);
+        int tempcounter = 0;
+        for (int z = j+1; z < n; z++ ){
+          printf(form, A[laufzahl + tempcounter + (z)]);
+          tempcounter+=z;
+        }
+        //Ende der Zeile
+        printf("\n");
+        laufzahl += 1;      
+        }
+    
+  }
+  
+}
 }
 
 void symmat_ausgeben_dreieck(const double *A,      // Matrix
@@ -457,9 +507,22 @@ void symmat_ausgeben_dreieck(const double *A,      // Matrix
   if (format != NULL)
     strcpy(form, format);
 
-  /*
-    ................................
-  */
+  int laufzahl = 0; //weil ich lazy bin, geht aber auch mit den Loops allein glaub ich ... und ich fang selbst schon an cursed deutsch zu coden
+  //Dreiecksschleife
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j <= i; j++) {
+      // wenn nicht auf diagonale
+        if (j != i) {
+          printf(format, A[laufzahl]);
+          laufzahl += 1;
+        } else {
+          //wenn auf Diagonale
+          printf(format, A[laufzahl]);
+          printf("\n");
+          laufzahl += 1;
+        }
+    }
+  }
 }
 
 void symmat_kopieren(double *A,         // Ziel (Rueckgabe)
@@ -473,6 +536,24 @@ double symmat_FrobeniusNorm(const double *A,   // Matrix
   /*
     ................................
   */
+  double solution;
+  int laufzahl = 0; //weil ich lazy bin, geht aber auch mit den Loops allein glaub ich ... und ich fang selbst schon an cursed deutsch zu coden
+  //Dreiecksschleife
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j <= i; j++) {
+      // wenn nicht auf diagonale
+        if (j != i) {
+          solution += 2 * (abs(A[laufzahl]) * abs(A[laufzahl])) ; 
+          laufzahl += 1;
+        } else {
+          //wenn auf Diagonale
+          solution += (abs(A[laufzahl]) * abs(A[laufzahl])) ;
+          laufzahl += 1;
+        }
+    }
+  }
+  solution = sqrt(solution);
+  return solution;
 }
 
 // B = alpha * A + B
@@ -497,6 +578,32 @@ void symmat_vektor_mult(double alpha,     // reelle Zahl mit der A*x skalliert w
                         double *y,        // Vektor y (Eingabe und Rueckgabe)
                         long n) {         // Anzahl Zeilen und Spalten von A
   /*
-    ................................
+    .....wie symmat ausgeben vong 1 algorithmus und so
   */
+  int laufzahl = 0;
+  
+  for (int i = 0; i < n; i++) {
+    double tempsafe = 0; 
+    for (int j = 0; j <= i; j++) {
+      if (i!=j) {
+        // i < j
+        tempsafe += ((A[laufzahl] * x[j]));
+        printf("%f %d\n", ((A[laufzahl] * x[j])), laufzahl);
+        laufzahl += 1;
+      } else {
+        // i = j
+        tempsafe += ((A[laufzahl] * x[j]));
+        int tempcounter = 0;
+        for (int z = j+1; z < n; z++ ){
+          tempsafe += (A[laufzahl + tempcounter + (z)] * x[z]);
+          tempcounter+=z;
+        }
+        //Ende der Zeile
+        y[i] = alpha * tempsafe + beta * y[i];
+        laufzahl += 1;      
+        }
+    
+  }
+  
+}
 }
