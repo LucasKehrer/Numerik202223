@@ -19,16 +19,19 @@ int main() {
   //Lade b
   n=4;
   matrix_laden_ascii("b_ascii.dat", &b, &n, &m);
-
+  printf(" C is: \n");
   CC_Zerlegung(4, SA);
   symmat_ausgeben_dreieck(SA, 4, "% 10.3e");
-  printf("\n");
+
+  printf("\n Vorwaertssubst \n");
   
   CC_VorwSubst(4, SA, b);
   vektor_ausgeben(b, 4, "% 10.3e") ;
+  printf("\n Rueckwaertssubst \n");
+
   CC_RueckwSubst(4, SA, b);
   vektor_ausgeben(b, 4, "% 10.3e") ;
-printf("\n");
+printf("\n Probe \n");
   //Probe
 
   //sry, ich finde die Art wie die deklariert ist seltsam...
@@ -38,6 +41,8 @@ printf("\n");
   x[2] = 0;
   x[3] = 0;
 
+  //Probe
+  matrix_laden_ascii("A_ascii.dat", &SA, &m, &n);
   symmat_vektor_mult(1, 0, SA, b, x, 4); //warum nur die cholesky matrix mal b ???
   vektor_ausgeben(x, 4, "% 10.3e");
 
