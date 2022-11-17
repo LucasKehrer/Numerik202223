@@ -25,12 +25,13 @@ int main() {
   printf("\n");
   
   CC_VorwSubst(4, SA, b);
+  vektor_ausgeben(b, 4, "% 10.3e") ;
   CC_RueckwSubst(4, SA, b);
   vektor_ausgeben(b, 4, "% 10.3e") ;
 printf("\n");
   //Probe
 
-  //sry, ich finde die Art wie die seklariert ist seltsam...
+  //sry, ich finde die Art wie die deklariert ist seltsam...
   double * x = vektor_neu(4);
   x[0] = 0;
   x[1] = 0;
