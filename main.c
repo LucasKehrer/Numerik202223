@@ -38,7 +38,7 @@ printf("\n");
   x[2] = 0;
   x[3] = 0;
 
-  symmat_vektor_mult(1, 0, SA, b, x, 4);
+  symmat_vektor_mult(1, 0, SA, b, x, 4); //warum nur die cholesky matrix mal b ???
   vektor_ausgeben(x, 4, "% 10.3e");
 
 
