@@ -588,7 +588,6 @@ void symmat_vektor_mult(double alpha,     // reelle Zahl mit der A*x skalliert w
       if (i!=j) {
         // i < j
         tempsafe += ((A[laufzahl] * x[j]));
-        printf("%f %d\n", ((A[laufzahl] * x[j])), laufzahl);
         laufzahl += 1;
       } else {
         // i = j
