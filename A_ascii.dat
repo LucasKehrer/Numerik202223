@@ -1,6 +1,7 @@
-# Symmetrische Matrix A aus Aufgabe 3.4.
-# Hierbei wurde die Symmetrie ausgenutzt und lediglich die untere 
-# Dreiecksmatrix zeilenweise in einem langen Zeilenvektor abgelegt.
+# Erstellt durch matrix_speichern_ascii()
 # Dateiname: A_ascii.dat
-1 10
-   1.000   5.000  29.000   2.000  16.000  22.000   0.000   2.000  15.000  33.000
+4 4
+   1.000   0.000  -3.000   8.000
+   0.000   0.000  -3.000   3.000
+   2.000  -6.000   0.000   3.000
+  -2.000   3.000   3.000  -3.000
