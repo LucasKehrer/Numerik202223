@@ -1,6 +1,21 @@
 #include <math.h>
+#include <stdio.h>
 
 #include "QR.h"
+
+
+/*
+* Helper function for sig(x)
+*/
+int signum(double x) {
+  if (x >= 0) {
+    return 1;
+  } else {
+    return -1;
+  }
+}
+
+
 
 /* Diese Funktion berechnet die QR-Zerlegung einer regulaeren
  * Matrix A mit Hilfe von Householder-Spiegelungen.
@@ -20,10 +35,98 @@
  */
 void QR_HS_Zerlegung(long n, double *A, double *u)
 {
+/*
+  
 
-  /*
-    ...................
-  */
+    // Für i = 1 bis i = n-1
+ for (int i = 0; i < n-1; i++) {
+    int myi_sum = 0;
+    for (int k = i; k<n ; k++) {
+        myi_sum += A[k*n+i]*A[k*n+i];
+    }
+    double myi = sqrt(myi_sum);
+
+    double lami = -signum(A[i*n+i]);
+
+  if (myi == 0) {
+    u[i] = 1;
+  } else {
+
+    double sigi = sqrt(2*myi*(myi + abs(A[i*n+i])));
+    //süß, ne
+    u[i] = (A[i*n+i] - lami*myi)/sigi;
+    
+    // U_k^(i)
+    for (int k = i+1; k<n; k++) {
+      u[k] = A[k*n+1]/sigi;
+    }
+
+    //a_ii
+    A[i*n+i] = lami*myi;
+
+    
+
+    for (int j = i; j<n; j++) {
+      double betai = 0;
+      for (int k = i; k<n; k++ ) {
+        betai += A[k*n+j]*u[k];
+      }
+
+      for (int k = i; k<n; k++) {
+        A[k*n+j] = A[k*n+j]- 2*betai*u[k];
+      }
+
+    }
+
+
+    //Speiche u_k^(i)
+    for (int k= i+1; k<n; k++) {
+      printf("Hallo %d %f \n", i, u[k]);
+      A[k*n+i] = u[k];
+    }
+    
+
+
+
+  }   
+ } 
+*/
+
+ for (int i = 0; i<n-1; i++) {
+    double betai = 0;
+    for (int k = i; k<n; k++) {
+      //myi
+      betai += A[k*n+i]*A[k*n+i];
+    }
+      double alpha = sqrt(betai);
+      if (alpha == 0) {
+        u[i] = 0; //nicht 1?
+      } else {
+        double c_i = 1/(betai + alpha * abs(A[i*n+i]));
+        if (A[i*n+i] < 0) {
+          alpha = alpha * (-1);
+        }
+        u[i] = A[i*n+i]+alpha;
+        printf("Test 2 = %f \n", (-1)*alpha);
+        A[i*n+i] = (-1) * alpha;
+        for (int k = i+1; k<n; k++) {
+          double sigma = u[i]*A[i*n+k];
+          for (int j = i+1; j<n; j++) {
+            sigma+= A[j*n+i]*A[j*n+k];
+          } 
+          sigma = sigma * c_i;
+          A[i*n+k] -= u[i] * sigma;
+
+          for (int j = i+1; j<n; j++) {
+            A[j*n+k] -= A[j*n+i]*sigma;
+          } 
+        }
+
+
+    
+    }
+ }
+
 
 }
 
@@ -49,7 +152,9 @@ void QR_HS_QTransX(long n, double *A, double *u, double *x)
     ...................
   */
 
+
 }
+
 
 /* Diese Funktion realisiert die Rueckwaertssubstitution
  * zum Loesen des linearen Gleichungssystems Rx = b,
