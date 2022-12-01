@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "QR.h"
+#include "basic_LinAlg.h"
 
 
 /*
@@ -35,97 +36,118 @@ int signum(double x) {
  */
 void QR_HS_Zerlegung(long n, double *A, double *u)
 {
+
+
 /*
-  
+for (int j = 0; j < n-1; j++){
 
-    // Für i = 1 bis i = n-1
- for (int i = 0; i < n-1; i++) {
-    int myi_sum = 0;
-    for (int k = i; k<n ; k++) {
-        myi_sum += A[k*n+i]*A[k*n+i];
-    }
-    double myi = sqrt(myi_sum);
+  double beta = 0;
+  for (int k = j; k<n; k++) {
+    beta+=A[k*n+j]*A[k*n+j];
+  }
 
-    double lami = -signum(A[i*n+i]);
+  double alpha = sqrt(beta);
 
-  if (myi == 0) {
-    u[i] = 1;
+  if (alpha == 0) {
+    u[j] = 0;
   } else {
+    double c_j = 1/(beta+alpha*fabs(A[j*n+j]));
+    if (A[j*n+j] < 0) {
+      alpha = -alpha;
+    } 
+    u[j] = A[j*n+j];
+    A[j*n+j]= (-alpha);
 
-    double sigi = sqrt(2*myi*(myi + abs(A[i*n+i])));
-    //süß, ne
-    u[i] = (A[i*n+i] - lami*myi)/sigi;
-    
-    // U_k^(i)
-    for (int k = i+1; k<n; k++) {
-      u[k] = A[k*n+1]/sigi;
-    }
-
-    //a_ii
-    A[i*n+i] = lami*myi;
-
-    
-
-    for (int j = i; j<n; j++) {
-      double betai = 0;
-      for (int k = i; k<n; k++ ) {
-        betai += A[k*n+j]*u[k];
+    for (int k = j+1; k<n; k++) {
+      double sum = u[j] * A[j*n+k];
+      for (int i = j+1; i<n; i++) {
+        sum+=sum*c_j;
       }
-
-      for (int k = i; k<n; k++) {
-        A[k*n+j] = A[k*n+j]- 2*betai*u[k];
+      sum = sum * c_j;
+      A[j*n+k] = A[j*n+k]-u[j]*sum;
+      for (int i = j+1; i<n; i++) {
+        A[i*n+k] = A[i*n+k] - A[i*n+j] * sum;
       }
-
     }
+  }
 
+printf("DEBUG: \n");
+matrix_ausgeben(A, 4 ,4, "% 10.3e");
+printf("\n");
+vektor_ausgeben(u, 4, "% 10.3e");
 
-    //Speiche u_k^(i)
-    for (int k= i+1; k<n; k++) {
-      printf("Hallo %d %f \n", i, u[k]);
-      A[k*n+i] = u[k];
-    }
-    
+}
 
-
-
-  }   
- } 
 */
 
- for (int i = 0; i<n-1; i++) {
-    double betai = 0;
-    for (int k = i; k<n; k++) {
-      //myi
-      betai += A[k*n+i]*A[k*n+i];
+  //für alle HAuptminore außer der letzte
+  for (int i = 0; i < (n-1); i++) {
+    
+    //berechne Norm erster Spalte
+    double alpha = 0;
+    for (int k = i; k < n; k++ ) {
+      alpha+=A[k*n+i]*A[k*n+i];
     }
-      double alpha = sqrt(betai);
-      if (alpha == 0) {
-        u[i] = 0; //nicht 1?
-      } else {
-        double c_i = 1/(betai + alpha * abs(A[i*n+i]));
-        if (A[i*n+i] < 0) {
-          alpha = alpha * (-1);
-        }
-        u[i] = A[i*n+i]+alpha;
-        printf("Test 2 = %f \n", (-1)*alpha);
-        A[i*n+i] = (-1) * alpha;
-        for (int k = i+1; k<n; k++) {
-          double sigma = u[i]*A[i*n+k];
-          for (int j = i+1; j<n; j++) {
-            sigma+= A[j*n+i]*A[j*n+k];
-          } 
-          sigma = sigma * c_i;
-          A[i*n+k] -= u[i] * sigma;
+    alpha = sqrt(alpha);
 
-          for (int j = i+1; j<n; j++) {
-            A[j*n+k] -= A[j*n+i]*sigma;
-          } 
-        }
-
+    //printf("Alpha %d=%f\n", i, alpha);
 
     
+    //hole u
+    //u_1^(1) (zwischeschritt) = aii - alpha
+    u[i] = A[i*n+i] - alpha;
+
+    //printf("A %f\n", A[i*n+i] );
+    //printf("u %f\n", u[i] );
+    //hole norm splate 1 mit verändertem a
+    double phi = u[i]*u[i];
+    //printf("phiTemp %d=%f\n", i, phi);
+    for (int k = i+1; k < n; k++ ) {
+      phi += A[k*n+i]*A[k*n+i];
+      //printf("phiTemp %d=%f\n", i, phi);
+    } 
+
+    phi = sqrt(phi);
+    //printf("phi %d=%f\n", i, phi);
+
+    //speichere u's sonstige
+    u[i] = u[i]/phi;
+    //printf("in %d u_%d = %f\n",i,i, u[i] );
+
+    for (int k = i+1; k < n; k++ ) {
+      // printf("A %f phi %f div %f\n", A[k*n+i], phi, A[k*n+i]/ phi );
+      double t = A[k*n+i]/ phi;
+      u[k] = t;
+     
+     // printf("in %d u_%d = %f\n",i,k, u[k] );
     }
- }
+
+    //berechne a's
+    double * A2 = matrix_neu(4,4); 
+    matrix_kopieren(A2, A, 4, 4);
+     for (int k = i; k<n; k++) {
+        for (int j = i; j<n; j++) { 
+        
+        double beta = 0;
+        for (int g = i; g< n; g++) {
+          beta += u[k]*u[g]*A2[g*n+j];
+       //   printf("vv^t_i = k=%d, g=%d; %f %f = %f, A2[g*n+j] = %f produkt = %f\n", k, g, u[k],u[g],u[k]*u[g] ,A2[g*n+j], u[k]*u[g]*A2[g*n+j]);
+        }
+       // printf("beta= %f \n", beta);
+        double t = A2[k*n+j] - 2*beta;
+       // printf("old A (%d,%d)= %f newA= %f \n",k,j,A2[k*n+j], t);
+        A[k*n+j] = t; 
+       // printf("-----------------\n");
+        }
+        }
+
+      for (int k = i+1; k < n; k++ ) {
+        A[k*n+i] = u[k];
+      }
+  	  matrix_freigeben(A2);
+      //matrix_ausgeben(A, 4, 4, " % 10.3e");
+
+ } 
 
 
 }
@@ -151,9 +173,58 @@ void QR_HS_QTransX(long n, double *A, double *u, double *x)
   /*
     ...................
   */
+  double * x2 = vektor_neu(n); 
+  double * A2 = matrix_neu(n,n);
+  for (int j = 0; j<n; j++){
+      A2[j*n+j] = 1;      
+  }
+
+  for (int i = n-2; i>=0; i--) {
+
+    double * A3 = matrix_neu(4,4);
+   for (int j = 0; j<n; j++){
+      A3[j*n+j] = 1;      
+    }
+  
+  for (int k = i; k<n; k++) {
+      if (k==i) {
+        x2[k]=u[k];
+      } else {
+        x2[k] = A[k*n+i];
+      }  
+    }
+  
+
+    for (int k = i; k<n; k++) {
+        for (int j = i; j<n; j++) { 
+        
+        double beta = 0;
+        for (int g = i; g< n; g++) {
+          beta += x2[k]*x2[g]*A2[g*n+j];
+      // printf("vv^t_i = k=%d, g=%d; %f %f = %f, A2[g*n+j] = %f produkt = %f\n", k, g, u[k],u[g],u[k]*u[g] ,A2[g*n+j], u[k]*u[g]*A2[g*n+j]);
+        }
+      //printf("beta= %f \n", beta);
+        double t = A2[k*n+j] - 2*beta;
+       //printf("old A (%d,%d)= %f newA= %f \n",k,j,A2[k*n+j], t);
+        A3[k*n+j] = t; 
+       //printf("-----------------\n");
+        }
+        }
+    matrix_kopieren(A2, A3, n, n);
+    matrix_freigeben(A3);
+
+  }  
+  printf("\n PROBE: Das ist Q:\n");
+  matrix_ausgeben(A2, n, n, " % 10.3e");
+
+  matrix_vektor_mult(1, 0, A2, x, x2, 4, 4);
+  vektor_kopieren(x,x2, n);
+  vektor_freigeben(x2);
+  matrix_freigeben(A2);
+  }
+    
 
 
-}
 
 
 /* Diese Funktion realisiert die Rueckwaertssubstitution
@@ -177,8 +248,14 @@ void QR_HS_QTransX(long n, double *A, double *u, double *x)
 void QR_RueckwSubst(long n, double *A, double *b)
 {
 
-  /*
-    ...................
-  */
+ for (int i = n-1; i>=0; i--) {
+  double t = 0;
+  for (int j = i+1; j<n; j++) {
+    t -= b[j]*A[i*n+j];
+    //printf ("t = %f\n", t);
+  }
+  b[i] = (b[i] + t) /A[i*n+i];
+  //printf("Le b = %f\n", b[i]);
+ }
 
 }
