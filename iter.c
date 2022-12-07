@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "iter.h"
 #include "basic_LinAlg.h"
 
@@ -14,21 +17,6 @@
  */
 void Jacobi_solver(double *A, double *x, double *b, long n, long iter)
 {
-  // Vektor Ausgabe
-  // TODO muss in main!
-  /*
-  if(iter == 60 || iter == 40 || iter == 20) {
-    vektor_ausgeben(x, n, "%10.3e");
-    double *C = vektor_neu(n);
-    vektor_kopieren(C,b,n);
-    for(int i = 0; i<n; i++) {
-      C[i] = -C[i];
-    }
-    matrix_mult(1,1,A,x,C,n,1,n);
-    vektor_ausgeben(C,n,"%10.3e");
-  }
-  */
-  
   if(iter == 0) {
     return;
   } else {
@@ -41,33 +29,17 @@ void Jacobi_solver(double *A, double *x, double *b, long n, long iter)
         if (j==i) {
           continue;
         } else {
-          sum += A[i*n+j] * xkop[j] - b[i];
+          sum += A[i*n+j] * xkop[j];
         }
       }
-      x[i] = -sum/aii;
+      x[i] = -(1/aii)*(sum-b[i]);
     }
-
     vektor_freigeben(xkop);
     Jacobi_solver(A,x,b,n,iter - 1);
   }
 }
 
-/* Diese Funktion realisiert das Gauss-Seidel-Verfahren zur
- * Approximation der Loesung x eines linearen Gleichungssystems.
- *
- * A - Matrix der Dimension nxn (Eingabe)
- * x - Startvektor der Itteration und anschliessend
- *     Approximation des Loesungsvektors (Ein- und Ausgabe)
- * b - Rechte Seite des Gleichungssystems (Eingabe)
- * n - Anzahl Zeilen und Spalten von A (Eingabe)
- * iter - Anzahl der durchzufuehrenden Iterationen (Eingabe)
- *
- * Hinweis: Spezialfall des Relaxations-Verfahren (SOR)
- */
-void GaussSeidel_solver(double *A, double *x, double *b, long n, long iter)
-{
-  SQR_solver(A,x,b,n,iter,1);
-}
+
 
 /* Diese Funktion realisiert das Relaxations-Verfahren zur
  * Approximation der Loesung x eines linearen Gleichungssystems.
@@ -106,6 +78,23 @@ void SOR_solver(double *A, double *x, double *b, long n, long iter,
     }
 
     vektor_freigeben(xkop);
-    SQR_solver(A,x,b,n,iter - 1, omega);
+    SOR_solver(A,x,b,n,iter - 1, omega);
+  }
 }
 
+/* Diese Funktion realisiert das Gauss-Seidel-Verfahren zur
+ * Approximation der Loesung x eines linearen Gleichungssystems.
+ *
+ * A - Matrix der Dimension nxn (Eingabe)
+ * x - Startvektor der Itteration und anschliessend
+ *     Approximation des Loesungsvektors (Ein- und Ausgabe)
+ * b - Rechte Seite des Gleichungssystems (Eingabe)
+ * n - Anzahl Zeilen und Spalten von A (Eingabe)
+ * iter - Anzahl der durchzufuehrenden Iterationen (Eingabe)
+ *
+ * Hinweis: Spezialfall des Relaxations-Verfahren (SOR)
+ */
+void GaussSeidel_solver(double *A, double *x, double *b, long n, long iter)
+{
+  SOR_solver(A,x,b,n,iter,1);
+}
