@@ -1,5 +1,7 @@
 #include "iter.h"
 #include "basic_LinAlg.h"
+//testing 
+#include "stdio.h"
 
 /* Diese Funktion wertet Tschebyscheff-Polynome T_n. 
  *
@@ -33,6 +35,54 @@ static double ChebPoly (long n, double x)
     }
 
   return t_k2;
+}
+
+/*
+* A bit functionaliity for CSR-Matrix
+*/
+
+/*
+ * Returns die Anzahl an Elementen in einer Zeile
+ * ACHTUNG: Angepasst, das Row 0 = die erste ist
+ * ACHTUNG: Schmeißt keinen Fehler, wenn i = n ist (bzw gibt nen outofbound halt..)
+ */
+
+long Sparse_getRowNumber(SparseMatrix_t A, long i) {
+  if (i < 0) {
+    return 0;
+  }
+  return A.rowIndex[i+1]-A.rowIndex[i];
+}
+
+/*
+ * Returned die aktuelle Spalte für einen Eintrag
+ */
+long Sparse_getColumn(SparseMatrix_t A, long i, long j) {
+  return A.columns[A.rowIndex[i]+j];
+}  
+
+
+/*
+ * Die Nachfolgende Funktion berechnet Ax, wobei A eine CSR-Matrix ist
+ *
+ * A - CSR-Matrix
+ * x - Vektor zum dranmultiplizieren
+ * y - Vektor, in den das Ergebnis gespeichert werden soll
+ */
+void Sparse_Matrix_mul(SparseMatrix_t A, double *x, double *y, long n) {
+  for (int i = 0; i < n; i++) {
+    y[i] = 0;
+    for (int j = 0; j < Sparse_getRowNumber(A, i); j++) {
+      
+      y[i] += A.values[A.rowIndex[i]+j] * x[Sparse_getColumn(A, i, j)];
+
+      /* Test
+       *if (i<100) {
+       *printf("y %d = %f mit A.values = %d \n", i, y[i], i+Sparse_getColumn(A, i, j));
+       *}
+       */
+    }
+  }
 }
 
 /* Diese Funktion realisiert das Jacobi-Verfahren mit
