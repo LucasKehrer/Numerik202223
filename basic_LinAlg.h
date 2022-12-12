@@ -3,9 +3,9 @@
  *  im Sommersemester 2015
  *  von Steffen Weisser
  *
- *  24. April 2015
+ *  29. Mai 2015
  *
- *  Version 2.0
+ *  Version 3.0
  *
  *  Dieses Paket zum Rechnen mit Matrizen und Vektoren
  *  basiert auf der Datei matrix2.c aus der Vorlesung
@@ -15,6 +15,17 @@
 
 #ifndef BASIC_LINALG_H
 #define BASIC_LINALG_H
+
+/********************************************************************************/
+/*********** Definitionen von Datenstrukturen ***********************************/
+/********************************************************************************/
+
+typedef struct SparseMatrix_s {
+  double *values;  // Einträge
+  long *columns;   // Spaltenindices
+  long *rowIndex;  // Index des ersten Eintrags pro Zeile
+} SparseMatrix_t;
+
 
 /********************************************************************************/
 /*********** Arbeiten mit Vektoren **********************************************/
@@ -37,16 +48,29 @@ void vektor_kopieren(double *x,         // Ziel (Rueckgabe)
                      const double *y,   // Quelle
                      long n);           // Laenge
 
+/* Der Vektor x wird skalliert:  x = alpha * x
+ */
+void vektor_skalieren(double alpha,  // Skallierungsparameter
+                      double *x,     // Vektor x (Ein- und Ausgabe)
+                      long n);       // Laenge
+
 /* Die Funktion berechnet die 2-Norm des Vektors x. */
 double vektor_2Norm(const double *x,   // Matrix
                     long n);           // Laenge
+
+/* Es wird das Skalarprodukt von den Vektoren x und y 
+ * berechnet und als Rueckgabewert zurueck gegeben.
+ */
+double vektor_skalprod(const double *x,  // Vektor x
+                       const double *y,  // Vektor y
+                       long n);          // Laenge
 
 /* Es werden zwei Vektoren addiert und das Ergebnis wird in y 
  * zurueck gegeben. Genauer gilt:   y = alpha * x + y
  */
 void vektor_addieren(double alpha,      // reelle Zahl mit der x skalliert wird
-                     const double *x,   // Matrix A
-                     double *y,         // Matrix B (Eingabe und Rueckgabe)
+                     const double *x,   // Vektor x
+                     double *y,         // Vektor y (Eingabe und Rueckgabe)
                      long n);           // Laenge
 
 /********************************************************************************/
@@ -190,6 +214,27 @@ int matrix_speichern_bin(char* dateiname, // Datei aus der die Matrix geladen wi
                          long m,          // Anzahl Zeilen
                          long n);         // Anzahl Spalten
 
+/* Die Funktion laed eine sparse Matrix aus einer Datei im ascii-Format. */
+int SparseMatrix_laden_ascii(char* dateiname,   // Datei aus der die Matrix geladen wird
+                             SparseMatrix_t *A, // Rueckgabe: Matrix (Call by Reference)
+                             long *n);          // Rueckgabe: Anzahl der Zeilen (Call by Reference)
+
+/* Die Funktion laed eine sparse Matrix aus einer Datei im bin-Format. */
+int SparseMatrix_laden_bin(char* dateiname,   // Datei aus der die Matrix geladen wird
+                           SparseMatrix_t *A, // Rueckgabe: Matrix (Call by Reference)
+                           long *n);          // Rueckgabe: Anzahl Zeilen (Call by Reference)
+
+/* Die Funktion speichert eine sparse Matrix in einer Datei im ascii-Format. */
+int SparseMatrix_speichern_ascii(char* dateiname,      // Datei zum speichern der Matrix
+                                 SparseMatrix_t A,     // Matrix
+                                 long n,               // Anzahl Zeilen
+                                 const char *format);  // Formatierung fuer fprintf
+
+/* Die Funktion speichert eine sparse Matrix in einer Datei im bin-Format. */
+int SparseMatrix_speichern_bin(char* dateiname,  // Datei aus der die Matrix geladen wird
+                               SparseMatrix_t A, // Matrix
+                               long n);          // Anzahl der Zeilen
+
 /********************************************************************************/
 /*********** Arbeiten mit symmetrischen Matrizen ********************************/
 /********************************************************************************/
@@ -237,5 +282,13 @@ void symmat_vektor_mult(double alpha,     // reelle Zahl mit der A*x skalliert w
                         const double *x,  // Vektor x 
                         double *y,        // Vektor y (Eingabe und Rueckgabe)
                         long n);          // Anzahl Zeilen und Spalten von A
+
+/********************************************************************************/
+/*********** Funktionen fuer duennbesetzte Matrizen (sparse) ********************/
+/********************************************************************************/
+
+/* Diese Funktion gibt den Speicher innerhalb einer sparse Matrix Struktur frei.
+*/
+void SparseMatrix_freigeben(SparseMatrix_t A);
 
 #endif

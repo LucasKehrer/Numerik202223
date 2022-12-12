@@ -1,8 +1,57 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "iter.h"
 #include "basic_LinAlg.h"
+
+/* Diese Funktion wertet Tschebyscheff-Polynome T_n. 
+ *
+ * n - Ordnung des Tschebyscheff-Polynoms T_n.
+ * x - Auswertungspunkt.
+ * Die Funktion gibt T_n(x) zurück.
+ */
+static double ChebPoly (long n, double x)
+{
+  double t_k1 = x, t_k = 1.;
+  double t_k2 = 2. * x * t_k1 - t_k;
+
+  if (n == 0)
+    {
+      return t_k;
+    }
+  else if (n == 1)
+    {
+      return t_k1;
+    }
+  else if (n == 2)
+    {
+      return t_k2;
+    }
+  
+  for (long k = 2; k < n; k++)
+    {
+      t_k = t_k1;
+      t_k1 = t_k2;
+      t_k2 = 2. * x * t_k1 - t_k;
+    }
+
+  return t_k2;
+}
+
+/* Diese Funktion realisiert das Jacobi-Verfahren mit
+ * Tschebyscheff-Beschleunigung zur Approximation der Loesung x eines linearen
+ * Gleichungssystems.
+ *
+ * A - Matrix der Dimension nxn (Eingabe)
+ * x - Startvektor der Itteration und anschliessend
+ *     Approximation des Loesungsvektors (Ein- und Ausgabe)
+ * b - Rechte Seite des Gleichungssystems (Eingabe)
+ * n - Anzahl Zeilen und Spalten von A (Eingabe)
+ * iter - Anzahl der durchzufuehrenden Iterationen (Eingabe)
+ * gamma_1 - Parameter aus Aufgabe 6.3 
+ * gamma_2 - Parameter aus Aufgabe 6.3
+ */
+void Sparse_JacobiCheb_solver(SparseMatrix_t A, double *x, double *b, long n,
+			      long iter, double gamma_1, double gamma_2)
+{
+}
 
 /* Diese Funktion realisiert das Jacobi-Verfahren zur
  * Approximation der Loesung x eines linearen Gleichungssystems.
@@ -15,86 +64,7 @@
  * iter - Anzahl der durchzufuehrenden Iterationen (Eingabe)
  *
  */
-void Jacobi_solver(double *A, double *x, double *b, long n, long iter)
+void Sparse_Jacobi_solver(SparseMatrix_t A, double *x, double *b, long n, long iter)
 {
-  if(iter == 0) {
-    return;
-  } else {
-    double *xkop = vektor_neu(n);
-    vektor_kopieren(xkop, x, n);
-    for(int i = 0; i<n; i++) {
-      double aii = A[i*n+i];
-      double sum = 0;
-      for (int j = 0; j<n; j++) {
-        if (j==i) {
-          continue;
-        } else {
-          sum += A[i*n+j] * xkop[j];
-        }
-      }
-      x[i] = -(1/aii)*(sum-b[i]);
-    }
-    vektor_freigeben(xkop);
-    Jacobi_solver(A,x,b,n,iter - 1);
-  }
 }
 
-
-
-/* Diese Funktion realisiert das Relaxations-Verfahren zur
- * Approximation der Loesung x eines linearen Gleichungssystems.
- *
- * A - Matrix der Dimension nxn (Eingabe)
- * x - Startvektor der Itteration und anschliessend
- *     Approximation des Loesungsvektors (Ein- und Ausgabe)
- * b - Rechte Seite des Gleichungssystems (Eingabe)
- * n - Anzahl Zeilen und Spalten von A (Eingabe)
- * iter - Anzahl der durchzufuehrenden Iterationen (Eingabe)
- * omega - Relaxationsparameter, i.A. aus dem Intervall (0,1]
- *         fuer symmetrisch positiv definite Matrizen kann man
- *         omega aus dem Intervall (0,2) waehlen (Eingabe)
- *
- * Hinweis: Spezialfall des Relaxations-Verfahren (SOR)
- */
-void SOR_solver(double *A, double *x, double *b, long n, long iter,
-                double omega)
-{
-  if(iter == 0) {
-    return;
-  } else {
-    double *xkop = vektor_neu(n);
-    vektor_kopieren(xkop, x, n);
-    for(int i = 0; i<n; i++) {
-      double aii = A[i*n+i];
-      double sum1 = 0;
-      for (int j = 0; j<i; j++) {
-        sum1 += A[i*n+j] * x[j];
-      }
-      double sum2 = 0;
-      for (int j = i+1; j<n; j++) {
-        sum2 += A[i*n+j] * xkop[j];
-      }
-      x[i] = (1-omega)*xkop[i] - (omega/aii)*sum1+sum2-b[i];
-    }
-
-    vektor_freigeben(xkop);
-    SOR_solver(A,x,b,n,iter - 1, omega);
-  }
-}
-
-/* Diese Funktion realisiert das Gauss-Seidel-Verfahren zur
- * Approximation der Loesung x eines linearen Gleichungssystems.
- *
- * A - Matrix der Dimension nxn (Eingabe)
- * x - Startvektor der Itteration und anschliessend
- *     Approximation des Loesungsvektors (Ein- und Ausgabe)
- * b - Rechte Seite des Gleichungssystems (Eingabe)
- * n - Anzahl Zeilen und Spalten von A (Eingabe)
- * iter - Anzahl der durchzufuehrenden Iterationen (Eingabe)
- *
- * Hinweis: Spezialfall des Relaxations-Verfahren (SOR)
- */
-void GaussSeidel_solver(double *A, double *x, double *b, long n, long iter)
-{
-  SOR_solver(A,x,b,n,iter,1);
-}
