@@ -43,7 +43,8 @@ int main()
 
   //matrix_ausgeben(t, n, 1, " % 10.3e");
 
-  
+  //einfach 10 mal laufen lassen, die Funktion signatur passt für das nicht...
+  //UND NOCH DEN JAKOBI AN SICH IMPLEMENTIEREN
     Sparse_JacobiCheb_solver(A, x, b, n, 1000, GAMMA_1, GAMMA_2);
     for(int j = 0; j<n; j++) {
       t[j] = x_optimal[j] - x[j]; 
