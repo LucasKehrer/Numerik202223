@@ -19,18 +19,40 @@ int main()
 
   
   //testvektor
-  double* tv = vektor_neu(n);
+  double* x = vektor_neu(n);
+  double* x_optimal = vektor_neu(n);
+
+
+  double* t = vektor_neu(n);
   //setze tv auf 1
   for(int i = 0; i<225; i++) {
-    tv[i] = 1;
+    x[i] = 0;
+    t[i] = 0;
   }
 
-  double* tv2 = vektor_neu(n);
+  double* b = vektor_neu(n);
+  long m = 1;
+  matrix_laden_ascii("b_ascii.dat", &b, &n, &m);
+  matrix_laden_ascii("x_exakt_ascii.dat", &b, &n, &m);
 
   //Sparse_Matrix_mul(A, tv, tv2, n);
-  Spars_getDiaginverse(A, tv2, n);
-  matrix_ausgeben(tv2, n, 1, " % 10.3e");
+  
+  
 
+  //TEST Sparse_Matrix_mul(A,x,t,n);
 
+  //matrix_ausgeben(t, n, 1, " % 10.3e");
+
+  
+    Sparse_JacobiCheb_solver(A, x, b, n, 1000, GAMMA_1, GAMMA_2);
+    for(int j = 0; j<n; j++) {
+      t[j] = x_optimal[j] - x[j]; 
+    }
+    printf("Die norm nach %d Schritten: %f \n", (1)*100, vektor_2Norm(t, n));
+  
+
+  Sparse_Matrix_mul(A,x,t,n);
+  Sparse_Matrix_mul(A,t,x,n);
+  matrix_ausgeben(x, n, 1, " % 10.3e");
   return 0;
 }

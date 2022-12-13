@@ -103,9 +103,58 @@ void multiply_Diavektor(double *B_inv, double *x, long n) {
 }
 
 
-
-void Sparse_JacobiChebHelper_solver(SparseMatrix_t A, double gamma, double twodivGamma1Gamma2, double *diaInv_vektor, double *x_k, double *xk_1, long iter) {
+void Sparse_JacobiChebHelper_solver(SparseMatrix_t A, double gamma, double twodivGamma1Gamma2, double *diaInv_vektor, double *x_k, double *xk_1, double *b, long k, long n) {
 //HIER
+  double omega = 1 ;
+  if (k != 0) {
+  omega = 2 * gamma * ((ChebPoly(k,gamma)) / (ChebPoly(k+1, gamma)));
+  }
+
+  //printf("omega %d: %f \n",k+1, omega);
+  double *temp = vektor_neu(n);
+
+  //Ax_k
+  Sparse_Matrix_mul(A, x_k, temp, n);
+  //printf("erste Zeile Ax_k: %f \n", temp[0]);
+
+  //b-Ax_k = a1
+  for (int i = 0; i<n; i++) {
+    temp[i] = b[i] - temp[i];
+  }
+  //printf("erste Zeile b-Ax_k: %f \n", temp[0]);
+
+  //B^-1 * a1
+  for (int i = 0; i<n; i++) {
+    //passt das ? 
+    temp[i] = diaInv_vektor[i] * temp[i];
+  }
+  //printf("erste Zeile B^-1*(b-Ax_k) mit diaelim %f: %f \n",diaInv_vektor[0], temp[0]);
+
+  // 2/g2+g1
+  for (int i = 0; i<n; i++) {
+    temp[i] = twodivGamma1Gamma2 * temp[i];
+  }
+  //printf("erste Zeile 2/g2+g1: %f \n", temp[0]);
+  // +xk -xk-1
+  for (int i = 0; i<n; i++) {
+    temp[i] = temp[i]+x_k[i]-xk_1[i];
+  }
+  //printf("erste Zeile x_k - x_k-1 (mit %f %f): %f \n",x_k[0], xk_1[0], temp[0]);
+
+  //*omega
+  for (int i = 0; i<n; i++) {
+    temp[i] = omega*temp[i];
+  }
+  //printf("erste Zeile omega * ..: %f \n", temp[0]);
+  //+xk-1
+  for (int i = 0; i<n; i++) {
+    temp[i] = temp[i] + xk_1[i];
+  }
+  //printf("+ x_k-1: %f \n", temp[0]);
+
+  vektor_kopieren(xk_1, x_k, n);
+  vektor_kopieren(x_k, temp, n);
+  //printf("passt das mit dem Kopieren?: %f \n", xk_1[0]);
 }
 
 
@@ -126,19 +175,29 @@ void Sparse_JacobiCheb_solver(SparseMatrix_t A, double *x, double *b, long n,
 			      long iter, double gamma_1, double gamma_2)
 {
   double gamma = (-1)*((gamma_2+gamma_1)/(gamma_2-gamma_1));
+  //printf("gamma: %f \n", gamma);
   double twodivGamm1Gamma2 = 2/(gamma_2+gamma_1);
+  //printf("1/g2+g1: %f \n", twodivGamm1Gamma2);
   double *B_inv = vektor_neu(n);
   Spars_getDiaginverse(A, B_inv, n);
 
-  double *x_k = vektor_neu(n);
   double *x_km1 = vektor_neu(n);
 
   for (int i = 0; i < n; i++) {
-    x_k[i] = 0;
+    x[i] = 0;
     x_km1[i] = 0; 
     }
 
-  Sparse_JacobiChebHelper_solver(A, gamma, twodivGamm1Gamma2, B_inv, x_k, x_km1, iter);
+//minimum eine Iteration
+  Sparse_JacobiChebHelper_solver(A, gamma, twodivGamm1Gamma2, B_inv, x, x_km1, b, 0, n); //letztes passt? k ist aktueller step
+  long k = iter -1;
+  while (k >= 1) {
+    Sparse_JacobiChebHelper_solver(A, gamma, twodivGamm1Gamma2, B_inv, x, x_km1, b, iter - k, n);
+    k -= 1;
+  }
+  //printf("passt kopie?: %f \n", x[0]);
+  
+
 }
 
 /* Diese Funktion realisiert das Jacobi-Verfahren zur
