@@ -84,6 +84,30 @@ void Sparse_Matrix_mul(SparseMatrix_t A, double *x, double *y, long n) {
     }
   }
 }
+/*Speichert die Inverse der Diagonale in einen Vektor*/
+void Spars_getDiaginverse(SparseMatrix_t A, double *x, long n) {
+  for (int i = 0; i < n; i++) {
+    x[i] = 0;
+    for (int j = 0; j < Sparse_getRowNumber(A, i); j++) {
+      if ((i == Sparse_getColumn(A, i, j)) && (A.values[A.rowIndex[i]+j] != 0)) {
+        x[i] = 1/(A.values[A.rowIndex[i]+j]);
+      }
+    }
+  }
+}
+
+void multiply_Diavektor(double *B_inv, double *x, long n) {
+  for (int i = 0; i < n; i++) {
+    x[i] = x[i]*B_inv[i];  
+    }
+}
+
+
+
+void Sparse_JacobiChebHelper_solver(SparseMatrix_t A, double gamma, double twodivGamma1Gamma2, double *diaInv_vektor, double *x_k, double *xk_1, long iter) {
+//HIER
+}
+
 
 /* Diese Funktion realisiert das Jacobi-Verfahren mit
  * Tschebyscheff-Beschleunigung zur Approximation der Loesung x eines linearen
@@ -101,6 +125,20 @@ void Sparse_Matrix_mul(SparseMatrix_t A, double *x, double *y, long n) {
 void Sparse_JacobiCheb_solver(SparseMatrix_t A, double *x, double *b, long n,
 			      long iter, double gamma_1, double gamma_2)
 {
+  double gamma = (-1)*((gamma_2+gamma_1)/(gamma_2-gamma_1));
+  double twodivGamm1Gamma2 = 2/(gamma_2+gamma_1);
+  double *B_inv = vektor_neu(n);
+  Spars_getDiaginverse(A, B_inv, n);
+
+  double *x_k = vektor_neu(n);
+  double *x_km1 = vektor_neu(n);
+
+  for (int i = 0; i < n; i++) {
+    x_k[i] = 0;
+    x_km1[i] = 0; 
+    }
+
+  Sparse_JacobiChebHelper_solver(A, gamma, twodivGamm1Gamma2, B_inv, x_k, x_km1, iter);
 }
 
 /* Diese Funktion realisiert das Jacobi-Verfahren zur
@@ -117,4 +155,5 @@ void Sparse_JacobiCheb_solver(SparseMatrix_t A, double *x, double *b, long n,
 void Sparse_Jacobi_solver(SparseMatrix_t A, double *x, double *b, long n, long iter)
 {
 }
+
 

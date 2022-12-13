@@ -27,7 +27,8 @@ int main()
 
   double* tv2 = vektor_neu(n);
 
-  Sparse_Matrix_mul(A, tv, tv2, n);
+  //Sparse_Matrix_mul(A, tv, tv2, n);
+  Spars_getDiaginverse(A, tv2, n);
   matrix_ausgeben(tv2, n, 1, " % 10.3e");
 
 
