@@ -33,7 +33,7 @@ int main()
   double* b = vektor_neu(n);
   long m = 1;
   matrix_laden_ascii("b_ascii.dat", &b, &n, &m);
-  matrix_laden_ascii("x_exakt_ascii.dat", &b, &n, &m);
+  matrix_laden_ascii("x_exakt_ascii.dat", &x_optimal, &n, &m);
 
   //Sparse_Matrix_mul(A, tv, tv2, n);
   
@@ -45,15 +45,46 @@ int main()
 
   //einfach 10 mal laufen lassen, die Funktion signatur passt für das nicht...
   //UND NOCH DEN JAKOBI AN SICH IMPLEMENTIEREN
-    Sparse_JacobiCheb_solver(A, x, b, n, 1000, GAMMA_1, GAMMA_2);
+  
+  printf("\n Mit Beschleunigung \n");
+
+  for (int i = 1; i<=10; i++) {
+    
+    Sparse_JacobiCheb_solver(A, x, b, n, i*100, GAMMA_1, GAMMA_2);
     for(int j = 0; j<n; j++) {
       t[j] = x_optimal[j] - x[j]; 
     }
-    printf("Die norm nach %d Schritten: %f \n", (1)*100, vektor_2Norm(t, n));
-  
+    printf("Die norm nach %d Schritten: %.10f \n", (i)*100, vektor_2Norm(t, n));
 
-  Sparse_Matrix_mul(A,x,t,n);
-  Sparse_Matrix_mul(A,t,x,n);
-  matrix_ausgeben(x, n, 1, " % 10.3e");
+    for(int j = 0; j<225; j++) {
+    x[j] = 0;
+    t[j] = 0;
+  }
+
+  }
+
+  printf("\n Ohne Beschleunigung \n");
+
+  for (int i = 1; i<=10; i++) {
+    
+    Sparse_Jacobi_solver(A, x, b, n, i*100);
+    for(int j = 0; j<n; j++) {
+      t[j] = x_optimal[j] - x[j]; 
+    }
+    printf("Die norm nach %d Schritten: %.10f \n", (i)*100, vektor_2Norm(t, n));
+
+    for(int j = 0; j<225; j++) {
+    x[j] = 0;
+    t[j] = 0;
+  }
+
+  }
+
+  vektor_freigeben(x);
+  vektor_freigeben(x_optimal);
+  vektor_freigeben(t);
+  vektor_freigeben(b);
+  SparseMatrix_freigeben(A);
+
   return 0;
 }

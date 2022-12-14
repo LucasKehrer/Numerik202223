@@ -154,6 +154,8 @@ void Sparse_JacobiChebHelper_solver(SparseMatrix_t A, double gamma, double twodi
 
   vektor_kopieren(xk_1, x_k, n);
   vektor_kopieren(x_k, temp, n);
+
+  vektor_freigeben(temp);
   //printf("passt das mit dem Kopieren?: %f \n", xk_1[0]);
 }
 
@@ -196,7 +198,8 @@ void Sparse_JacobiCheb_solver(SparseMatrix_t A, double *x, double *b, long n,
     k -= 1;
   }
   //printf("passt kopie?: %f \n", x[0]);
-  
+  vektor_freigeben(B_inv);
+  vektor_freigeben(x_km1);
 
 }
 
@@ -213,6 +216,25 @@ void Sparse_JacobiCheb_solver(SparseMatrix_t A, double *x, double *b, long n,
  */
 void Sparse_Jacobi_solver(SparseMatrix_t A, double *x, double *b, long n, long iter)
 {
+
+  double *B_inv = vektor_neu(n);
+  Spars_getDiaginverse(A, B_inv, n);
+
+  double *x_km1 = vektor_neu(n);
+  for (int i = 0; i < n; i++) {
+    x[i] = 0;
+    x_km1[i] = 0; 
+    }
+
+  Sparse_JacobiChebHelper_solver(A, 1, 1, B_inv, x, x_km1, b, 0, n); //letztes passt? k ist aktueller step
+  long counter = iter -1;
+  while (counter >= 1) {
+    Sparse_JacobiChebHelper_solver(A, 1, 1, B_inv, x, x_km1, b, 0, n);
+    counter -= 1;
+  }
+
+  vektor_freigeben(B_inv);
+  vektor_freigeben(x_km1);
 }
 
 
