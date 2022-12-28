@@ -3,9 +3,9 @@
  *  im Sommersemester 2015
  *  von Steffen Weisser
  *
- *  24. April 2015
+ *  29. Mai 2015
  *
- *  Version 2.0
+ *  Version 3.0
  *
  *  Dieses Paket zum Rechnen mit Matrizen und Vektoren
  *  basiert auf der Datei matrix2.c aus der Vorlesung
@@ -312,7 +312,7 @@ int matrix_speichern_ascii(char* dateiname,      // Datei zum speichern der Matr
                            long n,               // Anzahl Spalten
                            const char *format) { // Formatierung fuer fprintf
   long i, j;
-  static char form[32] = " % 7.3f";
+  static char form[32] = " % .15f";
   FILE *datei;  // Dateizeiger deklarieren
 
   if (format != NULL)
@@ -372,6 +372,270 @@ int matrix_speichern_bin(char* dateiname, // Datei aus der die Matrix geladen wi
   return 0;
 }
 
+int SparseMatrix_laden_ascii(char* dateiname,   // Datei aus der die Matrix geladen wird
+                             SparseMatrix_t *A, // Rueckgabe: Matrix (Call by Reference)
+                             long *n) {         // Rueckgabe: Anzahl der Zeilen (Call by Reference)
+  long i;
+  long anzahlEintraege;
+  char c;
+  FILE *datei;  // Dateizeiger deklarieren
+
+  datei = fopen(dateiname, "r");  // Datei zum lesen oeffnen
+  
+  // Fehlerbehandlung, falls Oeffnen fehlgeschlagen
+  if (datei == NULL) 
+    return -1; 
+
+  while ( (c=fgetc(datei)) == '#' ) // Kommentare ueberspringen
+    while ( fgetc(datei) != '\n' );
+
+  ungetc(c, datei); // ein Zeichen wurde zu viel gelesen. Zurueck damit!
+
+  /* 
+    Anzahl Zeilen und Spalten lesen sowie die Anzahl der nicht null Eintraege
+
+    Bei fscanf wird der Adressoperator & fuer das Argument n
+    nicht benoetigt. Es handelt sich hierbei bereits um Zeiger auf
+    die Variablen wegen Call by Reference.
+  */
+  if (fscanf(datei, "%ld %ld\n", n, &anzahlEintraege) != 2) {
+    fclose(datei);  // Datei schliessen
+    return -2; 
+  }
+
+  /* 
+    Soll die Matrix A bzw die Laengen n verwendet werden, muessen sie
+    dereferenziert werden. Wegen Call by Reference handelt es sich hierbei
+    jeweils um einen Zeiger auf die entsprechende Variable.
+  */
+  A->values = matrix_neu(anzahlEintraege, 1);
+
+  // Matrixeintraege einlesen
+  for (i=0; i<anzahlEintraege; i++) {     // Schleife ueber alle Eintraege
+    if (fscanf(datei, "%lf", &(A->values[i])) != 1) {
+      fclose(datei);               // Datei schliessen
+      matrix_freigeben(A->values); // angelegte Matrix freigeben
+      A->values = NULL;            // zur Sicherheit, da A nicht gelesen
+      return -2;
+    }
+  }
+
+  A->columns = (long *) calloc( anzahlEintraege, sizeof(long) );
+
+  if (A->columns == NULL) {  // Fehlerbehandlung
+    fprintf(stderr, "Fehler beim anlegen einer Matrix.\n");
+    exit(1); // Programm mit Rueckgabewert 1 beenden!!
+  }
+
+  // Spaltenindizes einlesen
+  for (i=0; i<anzahlEintraege; i++) {     // Schleife ueber alle Eintraege
+    if (fscanf(datei, "%ld", &(A->columns[i])) != 1) {
+      fclose(datei);                // Datei schliessen
+      matrix_freigeben(A->values);  // angelegte Matrix freigeben
+      free(A->columns);             // angelegte Matrix freigeben
+      A->values = NULL;             // zur Sicherheit, da A nicht gelesen
+      A->columns = NULL;            // zur Sicherheit, da A nicht gelesen
+      return -2;
+    }
+  }
+
+  A->rowIndex = (long *) calloc( *n+1, sizeof(long) );
+
+  if (A->rowIndex == NULL) {  // Fehlerbehandlung
+    fprintf(stderr, "Fehler beim anlegen einer Matrix.\n");
+    exit(1); // Programm mit Rueckgabewert 1 beenden!!
+  }
+
+  // rowIndex einlesen
+  for (i=0; i<*n+1; i++) {     // Schleife ueber alle Zeilen+1
+    if (fscanf(datei, "%ld", &(A->rowIndex[i])) != 1) {
+      fclose(datei);                 // Datei schliessen
+      matrix_freigeben(A->values);   // angelegte Matrix freigeben
+      free(A->columns);              // angelegte Matrix freigeben
+      free(A->rowIndex);             // angelegte Matrix freigeben
+      A->values = NULL;              // zur Sicherheit, da A nicht gelesen
+      A->columns = NULL;             // zur Sicherheit, da A nicht gelesen
+      A->rowIndex = NULL;            // zur Sicherheit, da A nicht gelesen
+      return -2;
+    }
+  }
+
+  fclose(datei);  // Datei schliessen
+
+  return 0;
+}
+
+int SparseMatrix_laden_bin(char* dateiname,   // Datei aus der die Matrix geladen wird
+                           SparseMatrix_t *A, // Rueckgabe: Matrix (Call by Reference)
+                           long *n) {         // Rueckgabe: Anzahl Zeilen (Call by Reference)
+  char c;
+  long anzahlEintraege;
+  FILE *datei;  // Dateizeiger deklarieren
+
+  datei = fopen(dateiname, "r");  // Datei zum lesen oeffnen
+  
+  // Fehlerbehandlung, falls Oeffnen fehlgeschlagen
+  if (datei == NULL) 
+    return -1; 
+
+  while ( (c=fgetc(datei)) == '#' ) // Kommentare ueberspringen
+    while ( fgetc(datei) != '\n' );
+
+  ungetc(c, datei); // ein Zeichen wurde zu viel gelesen. Zurueck damit!
+
+  /* 
+    Anzahl Zeilen und nicht null Eintraege lesen
+
+    Bei fscanf wird der Adressoperator & fuer die Argumente m und n
+    nicht benoetigt. Es handelt sich hierbei bereits um Zeiger auf
+    die Variablen wegen Call by Reference.
+  */
+  if (fscanf(datei, "%ld %ld\n", n, &anzahlEintraege) != 2) {
+    fclose(datei);  // Datei schliessen
+    return -2; 
+  }
+
+  /* 
+    Soll die Matrix A bzw die Laengen m, n verwendet werden, muessen sie
+    dereferenziert werden. Wegen Call by Reference handelt es sich hierbei
+    jeweils um einen Zeiger auf die entsprechende Variable.
+  */
+  A->values = matrix_neu(anzahlEintraege, 1);
+
+  // Matrixeintraege einlesen
+  if (fread(A->values, sizeof(double), anzahlEintraege, datei) != anzahlEintraege) {
+    fclose(datei);                 // Datei schliessen
+    matrix_freigeben(A->values);   // angelegte Matrix freigeben
+    A->values = NULL;              // zur Sicherheit, da A nicht gelesen
+    return -2;
+  }
+
+  A->columns = (long *) calloc( anzahlEintraege, sizeof(long) );
+
+  if (A->columns == NULL) {  // Fehlerbehandlung
+    fprintf(stderr, "Fehler beim anlegen einer Matrix.\n");
+    exit(1); // Programm mit Rueckgabewert 1 beenden!!
+  }
+
+  // Spaltenindizes einlesen
+  if (fread(A->columns, sizeof(long), anzahlEintraege, datei) != anzahlEintraege) {
+    fclose(datei);                // Datei schliessen
+    matrix_freigeben(A->values);  // angelegte Matrix freigeben
+    free(A->columns);             // angelegte Matrix freigeben
+    A->values = NULL;             // zur Sicherheit, da A nicht gelesen
+    A->columns = NULL;            // zur Sicherheit, da A nicht gelesen
+    return -2;
+  }
+
+  A->rowIndex = (long *) calloc( *n+1, sizeof(long) );
+
+  if (A->rowIndex == NULL) {  // Fehlerbehandlung
+    fprintf(stderr, "Fehler beim anlegen einer Matrix.\n");
+    exit(1); // Programm mit Rueckgabewert 1 beenden!!
+  }
+
+  // rowIndex einlesen
+  if (fread(A->rowIndex, sizeof(long), *n+1, datei) != *n+1) {
+    fclose(datei);                 // Datei schliessen
+    matrix_freigeben(A->values);   // angelegte Matrix freigeben
+    free(A->columns);              // angelegte Matrix freigeben
+    free(A->rowIndex);             // angelegte Matrix freigeben
+    A->values = NULL;              // zur Sicherheit, da A nicht gelesen
+    A->columns = NULL;             // zur Sicherheit, da A nicht gelesen
+    A->rowIndex = NULL;            // zur Sicherheit, da A nicht gelesen
+    return -2;
+  }
+
+  fclose(datei);  // Datei schliessen
+
+  return 0;
+}
+
+int SparseMatrix_speichern_ascii(char* dateiname,      // Datei zum speichern der Matrix
+                                 SparseMatrix_t A,     // Matrix
+                                 long n,               // Anzahl Zeilen
+                                 const char *format) { // Formatierung fuer fprintf
+  long i;
+  static char form[32] = " % 7.3f";
+  FILE *datei;  // Dateizeiger deklarieren
+
+  if (format != NULL)
+    strcpy(form, format);
+
+  datei = fopen(dateiname, "w");  // Datei zum schreiben oeffnen
+  
+  // Fehlerbehandlung, falls Oeffnen fehlgeschlagen
+  if (datei == NULL) 
+    return -1; 
+
+  fprintf(datei, "# Erstellt durch SparseMatrix_speichern_ascii()\n");
+  fprintf(datei, "# Dateiname: %s\n", dateiname);
+
+  // Anzahl Zeilen und Spalten schreiben
+  fprintf(datei, "%ld %ld\n", n, A.rowIndex[n]);
+
+  // Matrixeintraege schreiben
+  for (i=0; i<A.rowIndex[n]; i++) {
+    fprintf(datei, form, A.values[i]);
+  }
+  fprintf(datei, "\n");
+
+  // Spaltenindizes schreiben
+  for (i=0; i<A.rowIndex[n]; i++) {
+    fprintf(datei, " %6ld", A.columns[i]);
+  }
+  fprintf(datei, "\n");
+
+  // rowIndex schreiben
+  for (i=0; i<n+1; i++) {
+    fprintf(datei, " %6ld", A.rowIndex[i]);
+  }
+  fprintf(datei, "\n");
+
+  fclose(datei);  // Datei schliessen
+
+  return 0;
+}
+
+int SparseMatrix_speichern_bin(char* dateiname,  // Datei aus der die Matrix geladen wird
+                               SparseMatrix_t A, // Matrix
+                               long n) {         // Anzahl der Zeilen
+  FILE *datei;  // Dateizeiger deklarieren
+
+  datei = fopen(dateiname, "w");  // Datei zum lesen oeffnen
+  
+  // Fehlerbehandlung, falls Oeffnen fehlgeschlagen
+  if (datei == NULL) 
+    return -1; 
+
+  fprintf(datei, "# Erstellt durch SparseMatrix_speichern_bin()\n");
+  fprintf(datei, "# Dateiname: %s\n", dateiname);
+
+  // Anzahl Zeilen und nicht null Eintraege schreiben
+  fprintf(datei, "%ld %ld\n", n, A.rowIndex[n]);
+
+  // Matrixeintraege schreiben
+  if (fwrite(A.values, sizeof(double), A.rowIndex[n], datei) != A.rowIndex[n]) {
+    fclose(datei);  // Datei schliessen
+    return -2;
+  }
+
+  // Spaltenindizes schreiben
+  if (fwrite(A.columns, sizeof(long), A.rowIndex[n], datei) != A.rowIndex[n]) {
+    fclose(datei);  // Datei schliessen
+    return -2;
+  }
+
+  // rowIndex schreiben
+  if (fwrite(A.rowIndex, sizeof(long), n+1, datei) != n+1) {
+    fclose(datei);  // Datei schliessen
+    return -2;
+  }
+
+  fclose(datei);  // Datei schliessen
+
+  return 0;
+}
 /********************************************************************************/
 /*********** Funktionen fuer Vektoren *******************************************/
 /********************************************************************************/
@@ -405,18 +669,43 @@ void vektor_kopieren(double *x,         // Ziel (Rueckgabe)
   matrix_kopieren(x,y,n,1);
 }
 
+/* Der Vektor x wird skalliert:  x = alpha * x
+ */
+void vektor_skalieren(double alpha,  // Skallierungsparameter
+                      double *x,     // Vektor x (Ein- und Ausgabe)
+                      long n) {      // Laenge
+  long i;
+  for (i=0; i<n; i++)
+    x[i] *= alpha;
+}
+
 /* Die Funktion berechnet die 2-Norm des Vektors x. */
 double vektor_2Norm(const double *x,   // Matrix
                     long n) {          // Laenge
   return matrix_FrobeniusNorm(x,n,1);
 }
 
+/* Es wird das Skalarprodukt von den Vektoren x und y 
+ * berechnet und als Rueckgabewert zurueck gegeben.
+ */
+double vektor_skalprod(const double *x,  // Vektor x
+                       const double *y,  // Vektor y
+                       long n) {         // Laenge
+  long i;
+  double erg = 0;
+
+  for (i=0; i<n; i++)
+    erg += x[i] * y[i];
+
+  return erg;
+}
+
 /* Es werden zwei Vektoren addiert und das Ergebnis wird in y 
  * zurueck gegeben. Genauer gilt:   y = alpha * x + y
  */
 void vektor_addieren(double alpha,      // reelle Zahl mit der x skalliert wird
-                     const double *x,   // Matrix A
-                     double *y,         // Matrix B (Eingabe und Rueckgabe)
+                     const double *x,   // Vektor x
+                     double *y,         // Vektor y (Eingabe und Rueckgabe)
                      long n) {          // Laenge
   matrix_addieren(alpha,x,y,n,1);
 }
@@ -524,4 +813,19 @@ void symmat_vektor_mult(double alpha,     // reelle Zahl mit der A*x skalliert w
       else
         y[i] += alpha * A[j*(j+1)/2+i]*x[j];
   }
+}
+
+/********************************************************************************/
+/*********** Funktionen fuer duennbesetzte Matrizen (sparse) ********************/
+/********************************************************************************/
+
+/* Diese Funktion gibt den Speicher innerhalb einer sparse Matrix Struktur frei.
+*/
+void SparseMatrix_freigeben(SparseMatrix_t A) {
+  free(A.values);
+  free(A.columns);
+  free(A.rowIndex);
+  //A->values = NULL;   // haette keinen Effekt, da Call by Value und
+  //A->columns = NULL;  // somit eine Kopie der Struktur uebergeben wird
+  //A->rowIndex = NULL; 
 }
