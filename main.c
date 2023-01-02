@@ -49,7 +49,7 @@ int main()
 
   
 
-  printf("Mit Vorkoditionierung:--------------------\n");
+  printf("Ohne Vorkoditionierung:--------------------\n");
   for (int i = 1; i<=15; i++) {
     vektor_kopieren(x_0,b,n);
     long r = Sparse_cg(A, x_0, b, n, 0, i*5, EPS);
