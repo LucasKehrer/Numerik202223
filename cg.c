@@ -5,6 +5,75 @@
 
 #define OMEGA 1.581120979521361
 
+/*
+ * Berechnet B aus einer Sparse_Matrix und dem Relaxationsparameter omega
+*/
+double* calculateRelaxationMatrix(SparseMatrix_t A, double omega, long n) {
+
+  //get diagonal of A as vector
+  double* dia = vektor_neu(n);
+  Spars_getDiag(A, dia, n);
+
+  //get diainv of A as a vector
+  double* dia_inv = vektor_neu(n);
+  Spars_getDiaginverse(A, dia_inv, n);
+
+  //(1/(2-omega)) = a
+  double a = 1/(2-omega);
+
+  //L
+  double* L = SparsetoNormal(getL(A,n),n); 
+
+  //wL
+  for (int i = 0; i<n; i++) {
+    for (int j = 0; j<n; j++) {
+      L[i*n+j]=L[i*n+j]*omega;
+    }
+  }
+  
+  //L^t
+  double* Lt = transposeMatrix(L,n);
+
+  //wL^t
+  for (int i = 0; i<n; i++) {
+    for (int j = 0; j<n; j++) {
+      Lt[i*n+j]=Lt[i*n+j]*omega;
+    }
+  }
+
+  //(D+wL)
+    
+  for (int i = 0; i<n; i++) {
+    L[i*n+i] = L[i*n+i]+dia[i];
+  }
+
+  //a*(D+wL)
+  for (int i = 0; i<n; i++) {
+    for (int j = 0; j<n; j++) {
+      Lt[i*n+j]=Lt[i*n+j]*a;
+    }
+  }
+
+
+  // (D+wL^t)
+  
+  for (int i = 0; i<n; i++) {
+    Lt[i*n+i]=Lt[i*n+i]+dia[i];
+  }
+
+
+  //a*(D+WL)*D^-1
+
+  
+
+  //
+
+  return 0;
+
+
+
+}
+
 /* Diese Funktion wendet den SSOR-Vorkonditionierer an, w=B^{-1}r.
  *
  * A - Dünnbesetzte Matrix der Dimension nxn (Eingabe)
@@ -38,4 +107,6 @@ static void Sparse_SSOR_prec(SparseMatrix_t A, double *w, double *r, long n, dou
 long Sparse_cg(SparseMatrix_t A, double *x, double *b, long n, int prec, long iter, double eps) {
   return 0;
 }
+
+
 

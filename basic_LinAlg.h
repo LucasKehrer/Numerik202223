@@ -295,8 +295,13 @@ long Sparse_getColumn(SparseMatrix_t A, long i, long j);
 //Transformiert matrix in sparsematrix
 SparseMatrix_t transformSparse (double* A, long n);
 
+void Spars_getDiag(SparseMatrix_t A, double *x, long n);
+double* SparsetoNormal(SparseMatrix_t sA, long n);
+
 //Helper, den ich später vllt brauche
 void Spars_getDiaginverse(SparseMatrix_t A, double *x, long n);
+
+double* transposeMatrix(double* A, long n);
 
 SparseMatrix_t getL (SparseMatrix_t A, long n);
 /* Matrix-Vektor-Multiplikation fuer eine quadratische sparse Matrizen. Es gilt

@@ -844,6 +844,18 @@ long Sparse_getColumn(SparseMatrix_t A, long i, long j) {
   return A.columns[A.rowIndex[i]+j];
 }  
 
+/*Speichert die Diagonale in einen Vektor*/
+void Spars_getDiag(SparseMatrix_t A, double *x, long n) {
+  for (int i = 0; i < n; i++) {
+    x[i] = 0;
+    for (int j = 0; j < Sparse_getRowNumber(A, i); j++) {
+      if (i == Sparse_getColumn(A, i, j)) {
+        x[i] = (A.values[A.rowIndex[i]+j]);
+      }
+    }
+  }
+}
+
 /*Speichert die Inverse der Diagonale in einen Vektor*/
 void Spars_getDiaginverse(SparseMatrix_t A, double *x, long n) {
   for (int i = 0; i < n; i++) {
@@ -855,6 +867,20 @@ void Spars_getDiaginverse(SparseMatrix_t A, double *x, long n) {
     }
   }
 }
+
+
+double* SparsetoNormal(SparseMatrix_t sA, long n) {
+
+  double* A = matrix_neu(n,n);
+
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < Sparse_getRowNumber(sA, i); j++) {
+      A[i*n+ Sparse_getColumn(sA,i,j)] = sA.values[sA.rowIndex[i]+j];
+    }
+  }
+  return A;
+}
+
 
 /*Matrix to sparse*/
 
@@ -930,7 +956,6 @@ double* transposeMatrix(double* A, long n) {
       B[j*n+i]=A[i*n+j];
     }
   }
-  matrix_freigeben(A);
   return B;
 }
 

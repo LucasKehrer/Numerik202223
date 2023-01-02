@@ -41,12 +41,14 @@ int main()
   //TEST: Sparsematrix Mult
   // SparseMatrix_vektor_mult(1, 0, A, x_optimal, t, n);
   // vektor_ausgeben(t, n, " % 10.3e");
-
+/*
   SparseMatrix_t B = getL(A, n);
   for (int i = 0; i<420; i++) {
     printf("%ld \n", B.columns[i]);
   }
+*/
 
+  matrix_ausgeben(SparsetoNormal(A, n),n,n, " % 10.3e");
   return 0;
 }
 
