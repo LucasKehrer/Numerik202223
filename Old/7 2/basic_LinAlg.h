@@ -21,7 +21,7 @@
 /********************************************************************************/
 
 typedef struct SparseMatrix_s {
-  double *values;  // Eintr�ge
+  double *values;  // Eintr�ge
   long *columns;   // Spaltenindices
   long *rowIndex;  // Index des ersten Eintrags pro Zeile
 } SparseMatrix_t;
@@ -286,36 +286,6 @@ void symmat_vektor_mult(double alpha,     // reelle Zahl mit der A*x skalliert w
 /********************************************************************************/
 /*********** Funktionen fuer duennbesetzte Matrizen (sparse) ********************/
 /********************************************************************************/
-
-//Meine Funktionen von Blatt 7 (Die Vektormult ist leicht verändert für das skalar an y)
-
-long Sparse_getRowNumber(SparseMatrix_t A, long i);
-long Sparse_getColumn(SparseMatrix_t A, long i, long j);
-
-//Transformiert matrix in sparsematrix
-SparseMatrix_t transformSparse (double* A, long n);
-
-void Spars_getDiag(SparseMatrix_t A, double *x, long n);
-double* SparsetoNormal(SparseMatrix_t sA, long n);
-
-//Helper, den ich später vllt brauche
-void Spars_getDiaginverse(SparseMatrix_t A, double *x, long n);
-
-double* transposeMatrix(double* A, long n);
-
-SparseMatrix_t getL (SparseMatrix_t A, long n);
-/* Matrix-Vektor-Multiplikation fuer eine quadratische sparse Matrizen. Es gilt
-
-   y = alpha * A*x + beta * y
-
-   Hierbei ist A eine duennbesetzte n x n Matrix im sparse Format.
-*/
-void SparseMatrix_vektor_mult(double alpha,      // reelle Zahl mit der A*x skalliert wird
-                              double beta,       // reelle Zahl mit der y skalliert wird
-                              SparseMatrix_t A,  // Matrix A
-                              const double *x,   // Vektor x 
-                              double *y,         // Vektor y (Eingabe und Rueckgabe)
-                              long n);           // Anzahl Zeilen von A
 
 /* Diese Funktion gibt den Speicher innerhalb einer sparse Matrix Struktur frei.
 */

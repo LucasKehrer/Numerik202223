@@ -1,0 +1,7 @@
+# Erstellt durch matrix_speichern_ascii()
+# Dateiname: A_ascii.dat
+5 13
+    4  -1   -1   4  -1 -1   4  -1 -1   4  -1 -1   4 
+    0   1   0   1   2   1   2   3   2   3   4 3 4
+    0   2   5   8   11  13
+ 
